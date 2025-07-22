@@ -28,17 +28,20 @@ const TOKEN_URL = `${BRIGHTSPACE_HOST}/d2l/auth/token`;
 
 // Login route → redirects to Brightspace login
 app.get('/login', (req, res) => {
-  const authUrl = `${AUTHORIZE_URL}?response_type=code&client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}`;
+  const authUrl = `${BRIGHTSPACE_HOST}/d2l/auth/oauth2/authorize` +
+                  `?response_type=code` +
+                  `&client_id=${CLIENT_ID}` +
+                  `&redirect_uri=${encodeURIComponent(REDIRECT_URI)}`;
   res.redirect(authUrl);
 });
 
 // OAuth callback
 app.get('/callback', async (req, res) => {
-  const code = req.query.code;
-  if (!code) return res.status(400).send('No code provided');
+  const { code } = req.query;
+  if (!code) return res.status(400).send('Missing code');
 
   try {
-    const tokenRes = await axios.post(TOKEN_URL, null, {
+    const response = await axios.post(`${BRIGHTSPACE_HOST}/d2l/auth/token`, null, {
       params: {
         grant_type: 'authorization_code',
         code,
@@ -48,13 +51,14 @@ app.get('/callback', async (req, res) => {
       }
     });
 
-    req.session.access_token = tokenRes.data.access_token;
-    res.redirect(`${process.env.FRONTEND_ORIGIN}/your-widget.html`);
+    req.session.access_token = response.data.access_token;
+    res.redirect(`${FRONTEND_ORIGIN}/your-widget.html`);
   } catch (err) {
     console.error(err.response?.data || err.message);
-    res.status(500).send('OAuth failed');
+    res.status(500).send('OAuth exchange failed');
   }
 });
+
 
 // API route to get courses
 app.get('/api/courses', async (req, res) => {
@@ -62,13 +66,13 @@ app.get('/api/courses', async (req, res) => {
   if (!token) return res.status(401).json({ error: 'Not authenticated' });
 
   try {
-    const apiRes = await axios.get(`${BRIGHTSPACE_HOST}/d2l/api/lp/1.45/enrollments/myenrollments/`, {
+    const result = await axios.get(`${BRIGHTSPACE_HOST}/d2l/api/lp/1.45/enrollments/myenrollments/`, {
       headers: {
         Authorization: `Bearer ${token}`
       }
     });
 
-    const courses = apiRes.data.Items.map(c => ({
+    const courses = result.data.Items.map(c => ({
       name: c.CourseOffering.Name,
       code: c.CourseOffering.Code
     }));
@@ -79,6 +83,7 @@ app.get('/api/courses', async (req, res) => {
     res.status(500).json({ error: 'Failed to load courses' });
   }
 });
+
 
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
