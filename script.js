@@ -1,5 +1,5 @@
 // Replace with your deployed backend URL
-const API_URL = 'https://railway.com/api/courses';
+const API_URL = 'https://railway.com/railway.schema.json/api/courses';
 
 async function loadCourses() {
   try {
@@ -9,7 +9,7 @@ async function loadCourses() {
 
     if (res.status === 401) {
       // Not logged in → redirect to login
-      window.location.href = 'https://railway.com/login';
+      window.location.href = 'https://railway.com/railway.schema.json/login';
       return;
     }
 
