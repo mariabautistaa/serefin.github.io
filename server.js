@@ -15,11 +15,6 @@ app.use(cors({
   credentials: true
 }));
 
-app.use(session({
-  secret: 'your_secret_key',
-  resave: false,
-  saveUninitialized: true
-}));
 
 const {
   CLIENT_ID,
