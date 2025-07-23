@@ -84,17 +84,6 @@ app.get('/api/courses', async (req, res) => {
   }
 });
 
-app.use(session({
-  secret: process.env.SESSION_SECRET,
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    httpOnly: true,
-    secure: true,       // Only on HTTPS
-    sameSite: 'Lax'     // Or 'Strict' for tighter security
-  }
-}));
-
 
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
